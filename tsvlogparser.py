@@ -16,7 +16,6 @@ JSON_BODY = '[{"measurement": "errors",' \
             '"simulation": "%(simulation)s",' \
             '"user_count": 20,' \
             '"request_name": "%(request_name)s",' \
-            '"request_params": "%(request_params)s",' \
             '"error_status": "%(response_code)s",' \
             '"error_details": "%(error)s"},' \
             '"time": %(request_start)s,' \
@@ -35,6 +34,7 @@ class SimulationLogParser(object):
             for line in csv.reader(tsv, delimiter="\t"):
                 if len(line) >= 8 and (line[7] == "KO"):
                     data = self.parse(line)
+                    print JSON_BODY % data
                     self.write_to_db(loads(JSON_BODY % data))
 
     def parse(self, values):
@@ -43,11 +43,10 @@ class SimulationLogParser(object):
         arguments['simulation'] = values[1]
         arguments['requests'] = values[2]
         arguments['request_name'] = values[4]
-        arguments['request_start'] = values[5]
+        arguments['request_start'] = values[5] + "000000"
         arguments['request_end'] = values[6]
-        arguments['response_time'] = int(int(arguments['request_end']) - int(arguments['request_start']))
+        arguments['response_time'] = int(values[6]) - int(values[5])
         arguments['gatling_error'] = values[8]
-
         arguments['request_params'] = self.extract_params(regexp)
         arguments['response_code'] = regexp.group(2)
 

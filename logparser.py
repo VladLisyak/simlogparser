@@ -27,10 +27,13 @@ class SimulationLogParser(object):
         client.create_database('test')
         client.write_points(json_body)
 
+        # result = client.query('select value from cpu_load_short;')
+        # print("Result: {0}".format(result))
+
     def parse_log(self, path):
         with open(path) as infile:
             for line in infile:
-                if "\tKO\t" in line:
+                if "\tKO\t" in line:  # iterate through all without check
                     data = self.parse(line)
                     # print data
                     print JSON_BODY % data
@@ -45,7 +48,7 @@ class SimulationLogParser(object):
         arguments['request_name'] = values[3]
         arguments['request_start'] = values[4]
         arguments['request_end'] = values[5]
-        arguments['response_time'] = int(arguments['request_end']) - int(arguments['request_start'])
+        arguments['response_time'] = int(int(arguments['request_end']) - int(arguments['request_start']))
         arguments['gatling_error'] = values[7]
 
         arguments['request_params'] = self.extract_params(regexp)
