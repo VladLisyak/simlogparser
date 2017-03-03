@@ -5,6 +5,7 @@ import argparse
 import csv
 import re
 from difflib import SequenceMatcher
+from json import loads
 
 from influxdb import InfluxDBClient
 from collections import defaultdict
@@ -34,7 +35,7 @@ class SimulationLogParser(object):
             for line in csv.reader(tsv, delimiter="\t"):
                 if len(line) >= 8 and (line[7] == "KO"):
                     data = self.parse(line)
-                    print JSON_BODY % data
+                    self.write_to_db(loads(JSON_BODY % data))
 
     def parse(self, values):
         regexp = re.match(r".+ (https?://.+?),* .*HTTP Code: (.+?), Response: ?(.*),*", values[9])
