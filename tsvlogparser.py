@@ -17,6 +17,7 @@ JSON_BODY = '[{"measurement": "errors",' \
             '"user_count": 20,' \
             '"request_name": "%(request_name)s",' \
             '"error_status": "%(response_code)s",' \
+            '"error_code": "%(error_code)s",' \
             '"error_details": "%(error)s"},' \
             '"time": %(request_start)s,' \
             '"fields": {"response_time": %(response_time)s}}]'
@@ -34,11 +35,12 @@ class SimulationLogParser(object):
             for line in csv.reader(tsv, delimiter="\t"):
                 if len(line) >= 8 and (line[7] == "KO"):
                     data = self.parse(line)
-                    print JSON_BODY % data
                     self.write_to_db(loads(JSON_BODY % data))
 
     def parse(self, values):
         regexp = re.match(r".+ (https?://.+?),* .*HTTP Code: (.+?), Response: ?(.*),*", values[9])
+        error_code_regex = re.search(r'"code":"?(-?\d+)"?,', values[9])
+
         arguments = defaultdict()
         arguments['simulation'] = values[1]
         arguments['requests'] = values[2]
@@ -47,40 +49,34 @@ class SimulationLogParser(object):
         arguments['request_end'] = values[6]
         arguments['response_time'] = int(values[6]) - int(values[5])
         arguments['gatling_error'] = values[8]
-        arguments['request_params'] = self.extract_params(regexp)
-        arguments['response_code'] = regexp.group(2)
-
-        code_matcher = re.search(r"[a-zA-Z]*(\d+)", arguments['response_code'])
-
-        if code_matcher:
-            arguments['response_code'] = code_matcher.group(1)
-
-        current_err = values[9].replace('"', '\\"')
-        arguments['error'] = self.compare_error(current_err)
-
-        # arguments['error'] = values[9].replace('"', '\\"')#regexp.group(3)
+        arguments['response_code'] = self.extract_response_code(regexp.group(2))
+        arguments['error_code'] = self.extract_error_code(error_code_regex)
+        arguments['error'] = values[9].replace('"', '\\"') #self.compare_error(current_err)
         return arguments
 
-    def compare_error(self, current_err):
-        if len(SEEN_ERRORS) == 0:
-            SEEN_ERRORS.append(current_err)
-            return current_err
-        else:
-            seen = None
-            for seen_err in SEEN_ERRORS:
-                if SequenceMatcher(None, current_err, seen_err).ratio() >= 0.7:
-                    return seen_err
+    def extract_error_code(self, error_code_regex):
+        code = "undefined"
+        if error_code_regex:
+            code = str(error_code_regex.group(1))
+        return code
 
-            SEEN_ERRORS.append(current_err)
-            return current_err
+    def extract_response_code(self, code):
+        code_matcher = re.search(r"[a-zA-Z]*(\d+)", code)
+        if code_matcher:
+            return code_matcher.group(1)
+        return code
 
-    def extract_params(self, regexp):
-        params_list = regexp.group(1).split("?")
-        if len(params_list) <= 1:
-            params = ""
-        else:
-            params = params_list[len(params_list) - 1]
-        return params
+    # def compare_error(self, current_err):
+    #     if len(SEEN_ERRORS) == 0:
+    #         SEEN_ERRORS.append(current_err)
+    #         return current_err
+    #     else:
+    #         for seen_err in SEEN_ERRORS:
+    #             if SequenceMatcher(None, current_err, seen_err).ratio() >= 0.7:
+    #                 return seen_err
+    #
+    #         SEEN_ERRORS.append(current_err)
+    #         return current_err
 
 
 if __name__ == '__main__':
