@@ -30,6 +30,8 @@ DB_LOGIN = ''
 DB_PASSWORD = ''
 DB_NAME = 'perftest'
 
+PATH = None
+
 
 class ErrorClassifier:
     serialization_error = "failed to parse"
@@ -78,7 +80,7 @@ class SimulationLogParser(object):
     def parse_log(self):
         """Parse line with error and send to database"""
         client = InfluxDBClient(DB_URL, DB_PORT, DB_LOGIN, DB_PASSWORD, DB_NAME)
-        path = self.find_log()
+        path = self.find_log() if PATH is None else PATH
         with open(path) as tsv:
             for line in csv.reader(tsv, delimiter="\t"):
                 if len(line) >= 10 and (line[7] == "KO"):
@@ -136,10 +138,11 @@ if __name__ == '__main__':
     print "parsing simlog"
     parser = argparse.ArgumentParser(description='Simlog parser.')
 
+    parser.add_argument("-f", "--file", help="file path", default=None)
     parser.add_argument("-c", "--count", required=True, type=int, help="User count.")
     parser.add_argument("-t", "--type", required=True, help="Test type.")
     parser.add_argument("-s", "--simulation", required=True, help="Simulation")
-    parser.add_argument("-u", "--host", required=True)
+    parser.add_argument("-u", "--host")
     parser.add_argument("-p", "--port")
     parser.add_argument("-l", "--login")
     parser.add_argument("-w", "--password")
@@ -150,11 +153,23 @@ if __name__ == '__main__':
     userCount = args['count']
     testType = args['type']
     simulation = args['simulation']
-    DB_URL = args['host']
-    DB_PORT = args['port']
-    DB_LOGIN = args['login']
-    DB_PASSWORD = args['password']
-    DB_NAME = args['database']
+
+    if args['host'] is not None:
+        DB_URL = args['host']
+
+    if args['port'] is not None:
+        DB_PORT = args['port']
+
+    if args['login'] is not None:
+        DB_LOGIN = args['login']
+
+    if args['password'] is not None:
+        DB_PASSWORD = args['password']
+
+    if args['database'] is not None:
+        DB_NAME = args['database']
+
+    PATH = args['file']
 
     logParser = SimulationLogParser(testType, userCount, simulation)
     logParser.parse_log()
