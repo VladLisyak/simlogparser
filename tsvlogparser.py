@@ -10,7 +10,7 @@ from json import loads
 from influxdb import InfluxDBClient
 from collections import defaultdict
 
-RESULTS_FOLDER = '/opt/gatling/results/'
+RESULTS_FOLDER = '/opt/gatling/results'
 SIMLOG_NAME = 'simulation.log'
 SEARCH_WORD = "REQUEST"
 JSON_BODY = '[{"measurement": "errors",' \
@@ -135,27 +135,26 @@ class SimulationLogParser(object):
 if __name__ == '__main__':
     print "parsing simlog"
     parser = argparse.ArgumentParser(description='Simlog parser.')
-    # parser.add_argument("-f", "--file", required=True, help="Log to parse.")
+
     parser.add_argument("-c", "--count", required=True, type=int, help="User count.")
     parser.add_argument("-t", "--type", required=True, help="Test type.")
     parser.add_argument("-s", "--simulation", required=True, help="Simulation")
-    # parser.add_argument("-s", "--host", required=True)
-    # parser.add_argument("-p", "--port")
-    # parser.add_argument("-l", "--login")
-    # parser.add_argument("-w", "--password")
-    # parser.add_argument("-b", "--database")
+    parser.add_argument("-u", "--host", required=True)
+    parser.add_argument("-p", "--port")
+    parser.add_argument("-l", "--login")
+    parser.add_argument("-w", "--password")
+    parser.add_argument("-d", "--database")
 
     args = vars(parser.parse_args())
 
-    # logPath = args['file']
     userCount = args['count']
     testType = args['type']
     simulation = args['simulation']
-    # host = args['host']
-    # port = args['port']
-    # login = args['login']
-    # password = args['password']
-    # db  = args['database']
+    DB_URL = args['host']
+    DB_PORT = args['port']
+    DB_LOGIN = args['login']
+    DB_PASSWORD = args['password']
+    DB_NAME = args['database']
 
     logParser = SimulationLogParser(testType, userCount, simulation)
     logParser.parse_log()
