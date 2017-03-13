@@ -107,7 +107,6 @@ class SimulationLogParser(object):
         arguments['error'] = values[9].replace('"', '\\"')
 
         arguments['error_class'] = ErrorClassifier.classify_entry(arguments)
-        print arguments['error_class']
         return arguments
 
     def extract_error_code(self, error_code):
