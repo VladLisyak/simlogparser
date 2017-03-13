@@ -10,9 +10,9 @@ from json import loads
 from influxdb import InfluxDBClient
 from collections import defaultdict
 
-RESULTS_FOLDER = '/opt/gatling/results'
+RESULTS_FOLDER = '/opt/gatling/results/'
 SIMLOG_NAME = 'simulation.log'
-SEARCH_WORD = "REQUEST"
+
 JSON_BODY = '[{"measurement": "errors",' \
             '"tags": {"test_type": "%(test_type)s",' \
             '"simulation": "%(simulation)s",' \
@@ -72,10 +72,9 @@ class ErrorClassifier:
 
 
 class SimulationLogParser(object):
-    def __init__(self, test_type, user_count, simulation):
+    def __init__(self, test_type, user_count):
         self.user_count = user_count
         self.test_type = test_type
-        self.simulation = simulation
 
     def parse_log(self):
         """Parse line with error and send to database"""
@@ -95,7 +94,7 @@ class SimulationLogParser(object):
         arguments = defaultdict()
         arguments['test_type'] = self.test_type
         arguments['user_count'] = self.user_count
-        arguments['simulation'] = self.simulation
+        arguments['simulation'] = values[1].lower()
         arguments['requests'] = values[2]
         arguments['request_name'] = values[4]
         arguments['request_start'] = values[5] + "000000"
@@ -141,7 +140,6 @@ if __name__ == '__main__':
     parser.add_argument("-f", "--file", help="file path", default=None)
     parser.add_argument("-c", "--count", required=True, type=int, help="User count.")
     parser.add_argument("-t", "--type", required=True, help="Test type.")
-    parser.add_argument("-s", "--simulation", required=True, help="Simulation")
     parser.add_argument("-u", "--host")
     parser.add_argument("-p", "--port")
     parser.add_argument("-l", "--login")
@@ -152,7 +150,6 @@ if __name__ == '__main__':
 
     userCount = args['count']
     testType = args['type']
-    simulation = args['simulation']
 
     if args['host'] is not None:
         DB_URL = args['host']
@@ -171,5 +168,5 @@ if __name__ == '__main__':
 
     PATH = args['file']
 
-    logParser = SimulationLogParser(testType, userCount, simulation)
+    logParser = SimulationLogParser(testType, userCount)
     logParser.parse_log()
