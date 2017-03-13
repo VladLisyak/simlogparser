@@ -20,10 +20,8 @@ JSON_BODY = '[{"measurement": "errors",' \
             '"time": %(request_start)s,' \
             '"fields": {' \
             '"request_name": "%(request_name)s",' \
-            '"error_status": "%(response_code)s",' \
-            '"error_code": "%(error_code)s",' \
             '"error_details": "%(error)s",' \
-            '"error_class": "%(error_class)s",' \
+            '"error_type": "%(error_class)s",' \
             '"response_time": %(response_time)s}}]'
 
 DB_URL = '10.23.11.220'
